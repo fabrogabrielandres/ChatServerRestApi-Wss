@@ -8,7 +8,7 @@ export class AuthController {
     const { username, password } = req.body;
     const user = this.authService.isUserAuthenticated(username, password);
 
-    if (user)
+    if (user !== null)
       return res.status(201).json({
         user: user,
         authorized: true,

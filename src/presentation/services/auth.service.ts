@@ -1,7 +1,8 @@
-import { AuthInterface } from "../../domain/interfaces/Auth.interface";
+import e from "cors";
+import { UserAuthInterface } from "../../domain/interfaces/Auth.interface";
 
 export class AuthService {
-  users: AuthInterface[] = [
+  users: UserAuthInterface[] = [
     {
       id: "1",
       username: "alice",
@@ -25,11 +26,17 @@ export class AuthService {
   public isUserAuthenticated(
     username: string,
     password: string
-  ): Partial<AuthInterface> | null {
-    const user: AuthInterface[] = this.users.filter(
+  ): Partial<UserAuthInterface> | null {
+    console.log("llego aca", username, password);
+
+    const user: UserAuthInterface[] = this.users.filter(
       (user) => user.username === username && user.password === password
     );
-    const { password: passUser, ...userWithoutPass } = user[0];
-    return user ? userWithoutPass : null;
+    if (user.length > 0) {
+      const { password: passUser, ...userWithoutPass } = user[0];
+      return user ? userWithoutPass : null;
+    } else {
+      return null;
+    }
   }
 }
