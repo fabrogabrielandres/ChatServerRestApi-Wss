@@ -11,12 +11,13 @@ import { WssService } from "./presentation/services/wws.service";
 function main() {
   const server = new Server({
     port: envs.PORT,
-    routes: AppRoutes.routes,
   });
 
   const httpServer = createServer(server.app);
 
   WssService.initWss({ server: httpServer});
+
+  server.setRoutes(AppRoutes.routes)
 
   httpServer.listen(envs.PORT, () => {
     console.log(`Server is running on port ${envs.PORT}`);

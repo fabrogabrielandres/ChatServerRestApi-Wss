@@ -31,23 +31,22 @@ export const users: User[] = [
 ];
 
 export const authenticateWS = (ws: WebSocket, token: string) => {
-  const user = users.find(u => u.token === token);
+  const user = users.find((u) => u.token === token);
   if (!user) {
-    ws.close(1008, 'Unauthorized');
+    ws.close(1008, "Unauthorized");
     return null;
   }
   return user;
 };
-
 
 export class WssService {
   private static _instance: WssService;
   private wss: WebSocketServer;
 
   private constructor(options: Options) {
-    const { server, path = "/ws" } = options; /// ws://localhost:3000/ws
+    const { server } = options; /// ws://localhost:3000/ws
 
-    this.wss = new WebSocketServer({ server, path });
+    this.wss = new WebSocketServer({ server });
     this.start();
   }
 

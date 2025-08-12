@@ -6,7 +6,7 @@ export class AuthRouters {
     const router = Router();
     const authController = new AuthController();
 
-    router.get("/", authController.getTickets);
+    router.post("/", authController.isUserAuthenticated);
 
     return router;
   }
