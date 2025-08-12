@@ -11,7 +11,6 @@ export class AuthController {
     if (user)
       return res.status(201).json({
         user: user,
-        token: user.token,
         authorized: true,
       });
     return res.status(401).json({

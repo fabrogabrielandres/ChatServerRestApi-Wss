@@ -3,16 +3,19 @@ import { AuthInterface } from "../../domain/interfaces/Auth.interface";
 export class AuthService {
   users: AuthInterface[] = [
     {
+      id: "1",
       username: "alice",
       token: "alice-token",
       password: "123456",
     },
     {
+      id: "2",
       username: "bob",
       token: "bob-token",
       password: "123456",
     },
     {
+      id: "3",
       username: "charlie",
       token: "charlie-token",
       password: "123456",
@@ -22,10 +25,11 @@ export class AuthService {
   public isUserAuthenticated(
     username: string,
     password: string
-  ): AuthInterface | null {
-    const user = this.users.filter(
+  ): Partial<AuthInterface> | null {
+    const user: AuthInterface[] = this.users.filter(
       (user) => user.username === username && user.password === password
     );
-    return user ? user[0] : null;
+    const { password: passUser, ...userWithoutPass } = user[0];
+    return user ? userWithoutPass : null;
   }
 }
