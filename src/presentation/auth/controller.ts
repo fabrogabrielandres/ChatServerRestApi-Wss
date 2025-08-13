@@ -11,10 +11,10 @@ export class AuthController {
     if (user !== null)
       return res.status(201).json({
         user: user,
-        authorized: true,
+        authorized: "authorized",
       });
     return res.status(401).json({
-      authorized: false,
+      authorized: null,
     });
   };
 }
