@@ -25,8 +25,8 @@ export const users: User[] = [
   },
 ];
 
-export const authenticateWS = (ws: WebSocket, token: string) => {
-  const user = users.find((u) => u.token === token);
+export const authenticateWS = (ws: WebSocket, tokenUser: string) => {
+  const user = users.find((u) => u.token === tokenUser);
   if (!user) {
     ws.close(1008, "Unauthorized");
     return null;
@@ -76,17 +76,17 @@ export class WssService {
 
     this.wss.on("connection", (ws, req) => {
       console.log("new client connected");
-      const token = new URL(
+      const tokenUser = new URL(
         req.url || "",
         `ws://${req.headers.host}`
-      ).searchParams.get("token");
+      ).searchParams.get("tokenUser");
 
-      if (!token) {
+      if (!tokenUser) {
         ws.close(1008, "Token required");
         return;
       }
 
-      const user = authenticateWS(ws, token);
+      const user = authenticateWS(ws, tokenUser);
       if (!user) return;
 
       // Escuchar mensajes del cliente
