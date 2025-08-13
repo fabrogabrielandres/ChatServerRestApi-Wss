@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AuthService } from "../services/auth.service";
+import { AuthService } from "./service";
 
 export class AuthController {
   constructor(public authService = new AuthService()) {} // private readonly ticketService = new TicketService(),

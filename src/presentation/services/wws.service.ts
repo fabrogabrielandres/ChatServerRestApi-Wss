@@ -1,15 +1,10 @@
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
+import { User } from "../users/model";
 
 interface Options {
   server: Server;
   path?: string; // ws
-}
-
-interface User {
-  username: string;
-  token: string;
-  password: string;
 }
 
 export const users: User[] = [
