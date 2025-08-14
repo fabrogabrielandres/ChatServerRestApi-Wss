@@ -7,6 +7,11 @@ interface Options {
   path?: string; // ws
 }
 
+interface Room {
+  name: string;
+  clients: Set<WebSocket>;
+}
+
 export const users: User[] = [
   {
     username: "alice",
@@ -37,11 +42,18 @@ export const authenticateWS = (ws: WebSocket, tokenUser: string) => {
 export class WssService {
   private static _instance: WssService;
   private wss: WebSocketServer;
+  private rooms: Map<string, Room>; // Mapa de salas
+  private commonRoom = "general"; // Nombre de la sala común
 
   private constructor(options: Options) {
-    const { server } = options; /// ws://localhost:3000/ws
-
+    const { server } = options;
     this.wss = new WebSocketServer({ server });
+    this.rooms = new Map();
+    // Crear sala común por defecto
+    this.rooms.set(this.commonRoom, {
+      name: this.commonRoom,
+      clients: new Set(),
+    });
     this.start();
   }
 
@@ -57,10 +69,7 @@ export class WssService {
     WssService._instance = new WssService(options);
   }
 
-
   public start() {
-
-
     this.wss.on("connection", (ws, req) => {
       console.log("new client connected");
       const tokenUser = new URL(
@@ -76,28 +85,86 @@ export class WssService {
       const user = authenticateWS(ws, tokenUser);
       if (!user) return;
 
-      // Escuchar mensajes del cliente
+      // Añadir cliente a la sala común por defecto
+      this.addClientToRoom(ws, this.commonRoom);
+
       ws.on("message", (message) => {
-        const JsonTosend = {
-          msj: message.toString(),
-          username: user.username,
-        };
+        try {
+          const data = JSON.parse(message.toString());
 
-        const JsonToString = JSON.stringify(JsonTosend);
-
-        console.log(`Message from ${JsonTosend.username}: ${JsonTosend.msj}`);
-
-        // Reenviar el mensaje a TODOS los clientes conectados
-        this.wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            // Usa WebSocket.OPEN
-            client.send(JsonToString);
+          // Manejar creación de sala
+          if (data.type === "create_room" && data.roomName) {
+            this.createRoom(data.roomName, ws);
+            return;
           }
-        });
+
+          // Manejar mensajes normales
+          const JsonTosend = {
+            msj: data.message || message.toString(),
+            username: user.username,
+            room: data.room || this.commonRoom,
+          };
+
+          this.broadcastToRoom(JsonTosend.room, JSON.stringify(JsonTosend));
+        } catch (error) {
+          console.error("Error processing message:", error);
+        }
       });
 
-      // Enviar mensaje de bienvenida
-      // ws.send('wellcome to chat!');
+      ws.on("close", () => {
+        // Limpiar al desconectarse
+        this.removeClientFromAllRooms(ws);
+      });
     });
+  }
+  private addClientToRoom(ws: WebSocket, roomName: string) {
+    if (!this.rooms.has(roomName)) {
+      this.rooms.set(roomName, {
+        name: roomName,
+        clients: new Set(),
+      });
+    }
+    this.rooms.get(roomName)?.clients.add(ws);
+  }
+
+  private removeClientFromRoom(ws: WebSocket, roomName: string) {
+    this.rooms.get(roomName)?.clients.delete(ws);
+  }
+
+  private removeClientFromAllRooms(ws: WebSocket) {
+    this.rooms.forEach((room) => room.clients.delete(ws));
+  }
+
+  private createRoom(roomName: string, ws: WebSocket) {
+    if (!this.rooms.has(roomName)) {
+      this.rooms.set(roomName, {
+        name: roomName,
+        clients: new Set(),
+      });
+      ws.send(
+        JSON.stringify({
+          type: "room_created",
+          room: roomName,
+        })
+      );
+    } else {
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: "Room already exists",
+        })
+      );
+    }
+  }
+
+  private broadcastToRoom(roomName: string, message: string) {
+    const room = this.rooms.get(roomName);
+    if (room) {
+      room.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+        }
+      });
+    }
   }
 }
